@@ -31,10 +31,10 @@ benutzer = [];
 paswo = "";
 
 var connectsql = mysql.createConnection({
-	host: 'localhost',
-	user: 'root',
-	password: '',
-	database: 'chatDB'
+	host: 'eu-cdbr-sl-lhr-01.cleardb.net',
+	user: 'ba762a163ceca9',
+	password: 'a22f6ff0',
+	database: 'ibmx_08e1935b9edb780'
 });
 
 connectsql.connect(function(error){
