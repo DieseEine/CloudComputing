@@ -5,7 +5,8 @@
         <meta charset="utf-8">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
         <script src="socket.io/socket.io.js"></script>
-        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js">  </script>
 		<style>
 			body{
 				margin-top:50px;
@@ -23,9 +24,15 @@
 					<form id="userForm">
 						<div class="form-group">
 							<label>Enter Username</label>
+							<br/>
 							<input class="form-control" id="username" />
 							<br/>
+							<label>Enter Password  </label>
+							<br/>
+							<input class="form-control" type="password" id="psw" />
+							<br/>
 							<input type="submit" class="btn btn-primary" value="Login" />
+							<br/>
 						</div>
 					</form>
 				</div>
@@ -36,6 +43,16 @@
 						<h3>Online Users</h3>
 						<ul class="list-group" id="users"></ul>
 					</div>
+				</div>
+				<div class="well">
+				
+					<form id="eventForm" target="uploader_iframe" method="post" enctype="multipart/form-data" action="/">
+						<input type="file" name="file-to-upload">
+						<input type="submit" value="Upload" />
+					</form>
+					<iframe id="uploader_iframe" name="uploader_iframe" style="display: none;"></iframe>
+					
+					
 				</div>
 				<div class="col-md-8">
 					<div class="chat" id="chat"></div>
@@ -69,7 +86,26 @@
 				var $users = $('#users');
 				var $username = $('#username');
 				var $mediaForm = $('#mediaForm');
+				var $eventForm = $('#eventForm');
+				var $pic = $('#pic');
+				var $psw = $('#psw');
+				var user;
+				var pw;
 				
+				$eventForm.submit(function(e){
+					$.post("https://localhost:3000/",{user:user});
+					socket.emit('upload image');
+					setTimeout(uploadrefresh, 3000);
+				});
+				
+				function uploadrefresh(){
+				$.post("https://localhost:3000/",{user:user});
+					socket.emit('upload image');
+				}
+				
+				socket.on('upload image', function(data){
+					$pic.append('<div class="well"><img style="height:100px; width:100px" src="' +data.msg+'" alt="wrong path"/></div>');
+				});
 				
 				$mediaForm.submit(function(e){
 					e.preventDefault();
@@ -89,30 +125,32 @@
 				});
 				
 				socket.on('new message', function(data){
-					$chat.append('<div class="well"><strong>'+data.user+'</strong>['+data.date+']:'+data.msg+'</div>');
+					$chat.append('<div class="well"><strong>'+data.user+'</strong>['+data.date+']:'+data.msg+' Mood: '+data.mood+'</div>');
 				});
 				
 				socket.on('private message', function(data){
-					$chat.append('<div class="well"><strong>'+data.user+'</strong>['+data.date+']:<i>'+data.msg+'</i></div>');
+					$chat.append('<div class="well"><strong>'+data.user+'</strong>['+data.date+']:<i>'+data.msg+'</i> Mood: '+data.mood+'</div>');
 				});
 				
 				$userForm.submit(function(e){
 					e.preventDefault();
-					socket.emit('new user', $username.val(), function(data){
+					user=$username.val();
+					pw=$psw.val();
+					socket.emit('new user', $username.val(), $psw.val(), function(data){
 						if(data){
 						$userFormArea.hide();
 						$messageArea.show();
 						} else{
-							alert('username already taken!');
+							alert('username already taken or shorter than 2 or password shorter than 4!');
 						}
 					});
 					$username.val('');
 				});
 				
-				socket.on('get users',function(data){
+				socket.on('get users',function(data, pics){
 					var html = '';
 					for(i = 0; i< data.length;i++){
-						html += '<li class="list-group-item">'+data[i]+'</li>';
+						html += '<li class="list-group-item">'+data[i]+' <img style="height:100px; width:100px" src="'+pics[i]+'" alt="wrong path"/>'+'</li>';
 					}
 					$users.html(html);
 				});
